@@ -20,24 +20,30 @@ void make_tree(C3Vector vec3, int depth, int parent) {
     std::random_device rnd;
     std::uniform_real_distribution<float> dist(-0.5,0.5);
 
-    float diameter = powf(sqrtf(1.0/3.0), (float) depth);
+    float diameter = 0.2 * powf(sqrtf(1.0/3.0), (float) depth);
     float size[3] = { diameter, diameter, 1.0 };
     float brown[3] = {0.5,0.25,0.125};
 
     C3X3Matrix rot;
-    rot.setEulerAngles(dist(rnd), dist(rnd), dist(rnd) );
+    if (depth == 0) {
+        rot.setIdentity();
+    } else {
+        rot.setEulerAngles(dist(rnd), dist(rnd), dist(rnd));
+    }
 
     C3Vector offset = C3Vector(0,0,0.5);
 
     int cylinder = simCreatePureShape(PURE_SHAPE_CYLINDER, 8 /* respondable */, size, 1000.0, nullptr);
-
     simSetObjectParent(cylinder,parent,false);
-
     simSetObjectPosition(cylinder, parent, (vec3 + rot * offset).data);
-
     simSetObjectOrientation(cylinder, parent, rot.getEulerAngles().data);
-
     simSetShapeColor(cylinder, nullptr, sim_colorcomponent_ambient_diffuse, brown);
+
+    float cap_size[3] = { diameter, diameter, 1.0 };
+    int sphere_cap = simCreatePureShape(PURE_SHAPE_SPHERE, 8 /* respondable */, cap_size, 1000.0, nullptr);
+    simSetObjectParent(sphere_cap,cylinder,false);
+    simSetObjectPosition(sphere_cap, cylinder, offset.data);
+    simSetShapeColor(sphere_cap, nullptr, sim_colorcomponent_ambient_diffuse, brown);
 
     if (depth < 3) {
         for (int i = 0; i < 3; i++) {
